@@ -25,20 +25,31 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU id to use',
                         default=0, type=int)
+    '''parser.add_argument('--def', dest='prototxt',
+                        help='prototxt file defining the network',
+                        default='models/pascal_voc/VGG16/faster_rcnn_end2end/test.prototxt', type=str)'''
     parser.add_argument('--def', dest='prototxt',
                         help='prototxt file defining the network',
-                        default=None, type=str)
+                        default='models/pascal_voc/ResNet-50/rfcn_end2end/test_agnostic.prototxt', type=str)
+    '''parser.add_argument('--net', dest='caffemodel',
+                        help='model to test',
+                        default='output/faster_rcnn_end2end/voc_2007_train/vgg16_faster_rcnn_iter_200000.caffemodel', type=str)'''
     parser.add_argument('--net', dest='caffemodel',
                         help='model to test',
-                        default=None, type=str)
+                        default='output/rfcn_end2end/voc_0712_train/resnet50_rfcn_iter_200000.caffemodel', type=str)
+    '''parser.add_argument('--cfg', dest='cfg_file',
+                        help='optional config file', default='experiments/cfgs/faster_rcnn_end2end.yml', type=str)'''
     parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file', default=None, type=str)
+                        help='optional config file', default='experiments/cfgs/rfcn_end2end.yml', type=str)
     parser.add_argument('--wait', dest='wait',
                         help='wait until net file exists',
                         default=True, type=bool)
+    '''parser.add_argument('--imdb', dest='imdb_name',
+                        help='dataset to test',
+                        default='voc_2007_test', type=str)'''
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to test',
-                        default='voc_2007_test', type=str)
+                        default='voc_0712_test', type=str)
     parser.add_argument('--comp', dest='comp_mode', help='competition mode',
                         action='store_true')
     parser.add_argument('--set', dest='set_cfgs',
@@ -54,12 +65,14 @@ def parse_args():
 
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(1)
+      #  sys.exit(1)
 
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
+    import os
+    os.chdir('..')
     args = parse_args()
 
     print('Called with args:')

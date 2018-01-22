@@ -15,6 +15,8 @@ import os
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2
 from multiprocessing import Process
+import time
+import google.protobuf.text_format
 
 class SolverWrapper(object):
     """A simple wrapper around Caffe's solver.
@@ -157,9 +159,11 @@ def solve(proto, roidb, pretrained_model, gpus, uid, rank, output_dir, max_iter)
         solver.net.after_backward(nccl)
     count = 0
     while count < max_iter:
+        tic = time.time()
         solver.step(cfg.TRAIN.SNAPSHOT_ITERS)
-        if rank == 0:
-            solverW.snapshot()
+        print '{:.3f} second / iter'.format((time.time()-tic)/cfg.TRAIN.SNAPSHOT_ITERS)
+        #if rank == 0 and count%10==0:
+        solverW.snapshot()
         count = count + cfg.TRAIN.SNAPSHOT_ITERS
 
 def get_training_roidb(imdb):
@@ -215,3 +219,5 @@ def train_net_multi_gpu(solver_prototxt, roidb, output_dir, pretrained_model, ma
         procs.append(p)
     for p in procs:
         p.join()
+
+

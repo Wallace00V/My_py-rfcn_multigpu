@@ -30,19 +30,19 @@ def parse_args():
                         default=0, type=int)
     parser.add_argument('--solver', dest='solver',
                         help='solver prototxt',
-                        default=None, type=str)
+                        default='models/pascal_voc/VGG16/faster_rcnn_end2end/solver.prototxt', type=str)
     parser.add_argument('--iters', dest='max_iters',
                         help='number of iterations to train',
-                        default=40000, type=int)
+                        default=400, type=int)
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
-                        default=None, type=str)
+                        default='data/imagenet_models/VGG16.v2.caffemodel', type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
-                        default=None, type=str)
+                        default='experiments/cfgs/faster_rcnn_end2end.yml', type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to train on',
-                        default='voc_2007_trainval', type=str)
+                        default='voc_2007_train', type=str)
     parser.add_argument('--rand', dest='randomize',
                         help='randomize (do not use a fixed seed)',
                         action='store_true')
@@ -52,7 +52,7 @@ def parse_args():
 
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(1)
+      #  sys.exit(1)
 
     args = parser.parse_args()
     return args
@@ -77,6 +77,8 @@ def combined_roidb(imdb_names):
     return imdb, roidb
 
 if __name__ == '__main__':
+    import os
+    os.chdir('..')
     args = parse_args()
 
     print('Called with args:')
