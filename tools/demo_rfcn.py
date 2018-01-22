@@ -25,16 +25,13 @@ import caffe, os, sys, cv2
 import argparse
 
 CLASSES = ('__background__',
-           'aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+            '13001','1698','13000','110045','110046','13002','1431','460', '110035','3710',
+                         '529','2214','3499','1464','2672','2370','110034','3560','13004','1501','4013','534', '3889', '13003', '110049' )
 
 NETS = {'ResNet-101': ('ResNet-101',
                   'resnet101_rfcn_final.caffemodel'),
         'ResNet-50': ('ResNet-50',
-                  'resnet50_rfcn_final.caffemodel')}
+                  'resnet50_rfcn_iter_200000.caffemodel')}
 
 
 def vis_detections(im, class_name, dets, thresh=0.5):
@@ -69,33 +66,60 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.tight_layout()
     plt.draw()
 
-def demo(net, image_name):
+def demo(net):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
-    im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
-    im = cv2.imread(im_file)
+    '''im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+    im = cv2.imread(im_file)'''
+    cap = cv2.VideoCapture(1)
+    cap.set(3,1000)
+    cap.set(4,600)
 
     # Detect all object classes and regress object bounds
-    timer = Timer()
+    '''timer = Timer()
     timer.tic()
     scores, boxes = im_detect(net, im)
     timer.toc()
     print ('Detection took {:.3f}s for '
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+'''
+    while(1):
+        _,im = cap.read()
+        im = cv2.flip(im,1)
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
+        # Visualize detections for each class
+        scores, boxes = im_detect(net, im)
+        CONF_THRESH = 0.8
+        NMS_THRESH = 0.3
+        print '\n'*20
+        for cls_ind, cls in enumerate(CLASSES[1:]):
+            cls_ind += 1 # because we skipped background
+            cls_boxes = boxes[:, 4:8]
+            cls_scores = scores[:, cls_ind]
+            dets = np.hstack((cls_boxes,
+                              cls_scores[:, np.newaxis])).astype(np.float32)
+            keep = nms(dets, NMS_THRESH)
+            dets = dets[keep, :]
+            '''vis_detections(im, cls, dets, thresh=CONF_THRESH)'''
+            inds = np.where(dets[:, -1] >= 0.8)[0]
+            for i in inds:
+                # list_df += '\n' + cls + '\n'
+                text = cls + ':' + str(dets[i, 4])
+                bbox = dets[i, :4]
+                cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), thickness=3)
+                cv2.putText(im, text, (bbox[0], bbox[1]), 0, 1, (255, 0, 0), 2)
+                # cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0,255,0), thickness=3)
+                # cv2.putText(im, text, (bbox[0], bbox[1]), 0, 0.5, (255,0,0),2)
+                # print list_df + '\n' * 20
 
-    # Visualize detections for each class
-    CONF_THRESH = 0.8
-    NMS_THRESH = 0.3
-    for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4:8]
-        cls_scores = scores[:, cls_ind]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+                # flipped = cv2.flip(im,1)
+                print text
+        cv2.imshow("capture", im)
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 def parse_args():
     """Parse input arguments."""
@@ -106,7 +130,7 @@ def parse_args():
                         help='Use CPU mode (overrides --gpu)',
                         action='store_true')
     parser.add_argument('--net', dest='demo_net', help='Network to use [ResNet-101]',
-                        choices=NETS.keys(), default='ResNet-101')
+                        choices=NETS.keys(), default='ResNet-50')
 
     args = parser.parse_args()
 
@@ -140,11 +164,12 @@ if __name__ == '__main__':
     for i in xrange(2):
         _, _= im_detect(net, im)
 
-    im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
+    '''im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
                 '001763.jpg', '004545.jpg']
     for im_name in im_names:
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for data/demo/{}'.format(im_name)
         demo(net, im_name)
 
-    plt.show()
+    plt.show()'''
+    demo(net)
