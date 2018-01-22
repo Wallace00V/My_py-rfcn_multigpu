@@ -36,7 +36,7 @@ def parse_args():
                         default='output/faster_rcnn_end2end/voc_2007_train/vgg16_faster_rcnn_iter_200000.caffemodel', type=str)'''
     parser.add_argument('--net', dest='caffemodel',
                         help='model to test',
-                        default='output/rfcn_end2end/voc_0712_train/resnet50_rfcn_iter_200000.caffemodel', type=str)
+                        default='output/rfcn_end2end/voc_0712_train/resnet50_rfcn_iter_2100000.caffemodel', type=str)
     '''parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file', default='experiments/cfgs/faster_rcnn_end2end.yml', type=str)'''
     parser.add_argument('--cfg', dest='cfg_file',
