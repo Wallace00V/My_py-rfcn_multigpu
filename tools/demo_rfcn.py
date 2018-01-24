@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#coding=utf-8
 # --------------------------------------------------------
 # R-FCN
 # Copyright (c) 2016 Yuwen Xiong
@@ -24,14 +24,16 @@ import scipy.io as sio
 import caffe, os, sys, cv2
 import argparse
 
-CLASSES = ('__background__',
-            '13001','1698','13000','110045','110046','13002','1431','460', '110035','3710',
-                         '529','2214','3499','1464','2672','2370','110034','3560','13004','1501','4013','534', '3889', '13003', '110049' )
+#CLASSES = ('__background__',
+#            '13001','1698','13000','110045','110046','13002','1431','460', '110035','3710',
+#                         '529','2214','3499','1464','2672','2370','110034','3560','13004','1501','4013','534', '3889', '13003', '110049' )
 
+CLASSES = tuple(np.loadtxt('../classes561.txt',str))
 NETS = {'ResNet-101': ('ResNet-101',
                   'resnet101_rfcn_final.caffemodel'),
         'ResNet-50': ('ResNet-50',
-                  'resnet50_rfcn_iter_200000.caffemodel')}
+                  'resnet50_rfcn_iter_2100000.caffemodel')}
+
 
 
 def vis_detections(im, class_name, dets, thresh=0.5):
@@ -72,7 +74,7 @@ def demo(net):
     # Load the demo image
     '''im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
     im = cv2.imread(im_file)'''
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(-1)
     cap.set(3,1000)
     cap.set(4,600)
 
@@ -85,8 +87,9 @@ def demo(net):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 '''
     while(1):
+        tic = time.time()
         _,im = cap.read()
-        im = cv2.flip(im,1)
+        #im = cv2.flip(im,1)
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
         # Visualize detections for each class
@@ -94,6 +97,12 @@ def demo(net):
         CONF_THRESH = 0.8
         NMS_THRESH = 0.3
         print '\n'*20
+
+        cv2_im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        pil_im = Image.fromarray(cv2_im)
+        draw = ImageDraw.Draw(pil_im)
+        font = ImageFont.truetype("../simhei.ttf", 18, encoding="utf-8")
+
         for cls_ind, cls in enumerate(CLASSES[1:]):
             cls_ind += 1 # because we skipped background
             cls_boxes = boxes[:, 4:8]
@@ -103,20 +112,26 @@ def demo(net):
             keep = nms(dets, NMS_THRESH)
             dets = dets[keep, :]
             '''vis_detections(im, cls, dets, thresh=CONF_THRESH)'''
-            inds = np.where(dets[:, -1] >= 0.8)[0]
+            inds = np.where(dets[:, -1] >= 0.7)[0]
+            #print inds
             for i in inds:
                 # list_df += '\n' + cls + '\n'
                 text = cls + ':' + str(dets[i, 4])
+                if sku_number2name.has_key(cls):
+                    chinese_text =  text + sku_number2name[cls]
+                else:
+                    chinese_text =  text + u'未登记'
                 bbox = dets[i, :4]
-                cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), thickness=3)
-                cv2.putText(im, text, (bbox[0], bbox[1]), 0, 1, (255, 0, 0), 2)
-                # cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0,255,0), thickness=3)
-                # cv2.putText(im, text, (bbox[0], bbox[1]), 0, 0.5, (255,0,0),2)
-                # print list_df + '\n' * 20
+                #cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), thickness=3)
+                #cv2.putText(im, text, (bbox[0], bbox[1]), 0, 1, (255, 0, 0), 2)
 
-                # flipped = cv2.flip(im,1)
-                print text
-        cv2.imshow("capture", im)
+                draw.text((bbox[0], bbox[1]), chinese_text, (0, 0, 0), font=font)
+                draw.rectangle((bbox[0], bbox[1],bbox[2], bbox[3]),outline=(255,0,0))
+                print (text)
+
+        cv2_text_im = cv2.cvtColor(np.array(pil_im), cv2.COLOR_RGB2BGR)
+        cv2.imshow("capture", cv2_text_im)
+        #print 'times: {:.3f} s'.format(time.time()-tic)
 
     cap.release()
     cv2.destroyAllWindows()
@@ -137,6 +152,12 @@ def parse_args():
     return args
 
 if __name__ == '__main__':
+    import time
+    from PIL import Image,ImageDraw,ImageFont
+    import pickle as pkl
+    with open('../sku_name.pkl', 'r') as f:
+        sku_number2name = pkl.load(f)
+
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
 
     args = parse_args()
